@@ -1,56 +1,54 @@
-var monk = require('monk');
+var mongoose = require('mongoose');
 
 /**
- * botkit-storage-mongo - MongoDB driver for Botkit
+ * botkit-storage-mongoose - MongoDB/Mongoose driver for Botkit
  *
  * @param  {Object} config Must contain a mongoUri property
  * @return {Object} A storage object conforming to the Botkit storage interface
  */
 module.exports = function(config) {
-    /**
-     * Example mongoUri is:
-     * 'mongodb://test:test@ds037145.mongolab.com:37145/slack-bot-test'
-     * or
-     * 'localhost/mydb,192.168.1.1'
-     */
+
     if (!config || !config.mongoUri) {
         throw new Error('Need to provide mongo address.');
     }
 
-    var db = monk(config.mongoUri),
-        storage = {};
+    var db = mongoose.createConnection(config.mongoUri);
+    var storage = {};
+    var zones = ['teams', 'channels', 'users'];
 
-    ['teams', 'channels', 'users'].forEach(function(zone) {
-        storage[zone] = getStorage(db, zone);
+    zones.forEach(function(zone) {
+        var model = createModel(db, zone);
+        storage[zone] = getStorage(model);
     });
 
     return storage;
 };
 
-/**
- * Creates a storage object for a given "zone", i.e, teams, channels, or users
- *
- * @param {Object} db A reference to the MongoDB instance
- * @param {String} zone The table to query in the database
- * @returns {{get: get, save: save, all: all}}
- */
-function getStorage(db, zone) {
-    var table = db.get(zone);
+function createModel(db, zone) {
+    var schema = new mongoose.Schema({}, {
+        strict: false,
+        collection: zone
+    });
+    return db.model(zone, schema);
+}
 
+function getStorage(model) {
     return {
         get: function(id, cb) {
-            table.findOne({id: id}, cb);
+            model.findOne({
+                id: id
+            }).lean().exec(cb);
         },
         save: function(data, cb) {
-            table.findAndModify({
+            model.findOneAndUpdate({
                 id: data.id
             }, data, {
                 upsert: true,
                 new: true
-            }, cb);
+            }).lean().exec(cb);
         },
         all: function(cb) {
-            table.find({}, cb);
+            model.find({}).lean().exec(cb);
         }
     };
 }

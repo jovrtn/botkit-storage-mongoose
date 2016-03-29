@@ -1,19 +1,19 @@
-# botkit-storage-mongo
+# botkit-storage-mongoose
 
-A Mongo storage module for Botkit.
+A MongoDB/Mongoose storage module for Botkit.
 
 ## Usage
 
-Just require `botkit-storage-mongo` and pass it a config with a `mongoUri` option.
+Just require `botkit-storage-mongoose` and pass it a config with a `mongoUri` option.
 Then pass the returned storage when creating your Botkit controller. Botkit will do the rest.
 
 Make sure everything you store has an `id` property, that's what you'll use to look it up later.
 
 ```
 var Botkit = require('botkit'),
-    firebaseStorage = require('botkit-storage-mongo')({mongoUri: '...'}),
+    mongodbStorage = require('botkit-storage-mongoose')({mongoUri: '...'}),
     controller = Botkit.slackbot({
-        storage: firebaseStorage
+        storage: mongodbStorage
     });
 ```
 

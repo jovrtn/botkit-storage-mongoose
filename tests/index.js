@@ -2,31 +2,40 @@ var should = require('should'),
     sinon = require('sinon'),
     proxyquire = require('proxyquire').noCallThru();
 
+// Models
+var Teams = require('../src/models/teams');
+var Channels = require('../src/models/channels');
+var Users = require('../src/models/users');
+
 require('should-sinon');
 
 describe('Mongo', function() {
-    var monkMock,
+    var mongooseMock,
         collectionMock,
         collectionObj,
         Storage,
         config;
 
     beforeEach(function() {
-        config = {mongoUri: 'http://someurl.somewhere.com'};
+        config = {
+            mongoUri: 'http://someurl.somewhere.com'
+        };
 
         collectionObj = {
             find: sinon.stub(),
             findOne: sinon.stub(),
-            findAndModify: sinon.stub()
+            findOneAndUpdate: sinon.stub()
         };
 
         collectionMock = {
             get: sinon.stub().returns(collectionObj)
         };
 
-        monkMock = sinon.stub().returns(collectionMock);
+        mongooseMock = sinon.stub().returns(collectionMock);
 
-        Storage = proxyquire('../src/index', {monk: monkMock});
+        Storage = proxyquire('../src/index', {
+            mongoose: mongooseMock
+        });
     });
 
     describe('Initialization', function() {
@@ -35,48 +44,68 @@ describe('Mongo', function() {
         });
 
         it('should throw an error if mongoUri is missing', function() {
-            (function() {Storage({});}).should.throw('Need to provide mongo address.');
+            (function() {
+                Storage({});
+            }).should.throw('Need to provide mongo address.');
         });
 
-        it('should initialize monk with mongoUri', function() {
+        it('should initialize mongoose with mongoUri', function() {
             Storage(config);
-            monkMock.callCount.should.equal(1);
-            monkMock.args[0][0].should.equal(config.mongoUri);
+            mongooseMock.callCount.should.equal(1);
+            mongooseMock.args[0][0].should.equal(config.mongoUri);
         });
     });
 
-    ['teams', 'channels', 'users'].forEach(function(method) {
-        describe(method + '.get', function() {
+    var zones = [{
+        name: 'teams',
+        model: Teams
+    }, {
+        name: 'channels',
+        model: Channels
+    }, {
+        name: 'users',
+        model: Users
+    }];
+
+    zones.forEach(function(zone) {
+        describe(model + '.get', function() {
             it('should call findOne with callback', function() {
                 var cb = sinon.stub();
 
-                Storage(config)[method].get('walterwhite', cb);
-                collectionObj.findOne.should.be.calledWith({id: 'walterwhite'}, cb);
+                Storage(config)[model].get('walterwhite', cb);
+                collectionObj.findOne.should.be.calledWith({
+                    id: 'walterwhite'
+                }, cb);
             });
         });
 
-        describe(method + '.save', function() {
+        describe(model + '.save', function() {
 
-            it('should call findAndModify', function() {
-                var data = {id: 'walterwhite'},
+            it('should call findOneAndUpdate', function() {
+                var data = {
+                        id: 'walterwhite'
+                    },
                     cb = sinon.stub();
 
-                Storage(config)[method].save(data, cb);
-                collectionObj.findAndModify.should.be.calledWith(
-                    {id: 'walterwhite'},
-                    data,
-                    {upsert: true, 'new': true},
+                Storage(config)[model].save(data, cb);
+                collectionObj.findOneAndUpdate.should.be.calledWith({
+                        id: 'walterwhite'
+                    },
+                    data, {
+                        upsert: true,
+                        'new': true
+                    },
                     cb
                 );
             });
         });
 
-        describe(method + '.all', function() {
+        describe(model + '.all', function() {
 
             it('should call find', function() {
                 var cb = sinon.stub();
 
-                Storage(config)[method].all(cb);
+                Storage(config)[model].all(cb);
                 collectionObj.find.should.be.calledWith({}, cb);
             });
         });

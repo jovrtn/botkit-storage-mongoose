@@ -1,7 +1,7 @@
 {
-  "name": "botkit-storage-mongo",
-  "version": "1.0.2",
-  "description": "A MongoDB storage driver for Botkit",
+  "name": "botkit-storage-mongoose",
+  "version": "0.1.0",
+  "description": "A MongoDB/Mongoose storage driver for Botkit",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -15,7 +15,8 @@
   "keywords": [
     "botkit",
     "mongodb",
-    "slack"
+    "slack",
+    "mongoose"
   ],
   "author": "",
   "license": "MIT",
@@ -24,7 +25,7 @@
   },
   "homepage": "https://github.com/howdyai/botkit-storage-mongo#readme",
   "dependencies": {
-    "monk": "^1.0.1"
+    "mongoose": "^4.4.2"
   },
   "devDependencies": {
     "istanbul": "^0.4.2",
